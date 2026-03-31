@@ -92,10 +92,15 @@ def predict_user_savings():
         #error_trace = traceback.format_exc()
         #print(f"Unexpected error in /savings endpoint: {error_trace}")
         
+        try:
+            user_id = data.get('user_id') if 'data' in locals() and data else None
+        except:
+            user_id = None
+        
         return jsonify({
             'success': False,
             'error': f'Internal server error: {str(e)}',
-            'user_id': data.get('user_id') if data else None
+            'user_id': user_id
         }), 500
 
 
@@ -148,6 +153,6 @@ if __name__ == '__main__':
     # Run the Flask app
     # Debug mode is enabled for development
     # In production, use a proper WSGI server like gunicorn
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(debug=True, host='0.0.0.0', port=9476)
 
 # Made with Bob
