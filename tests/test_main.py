@@ -10,6 +10,7 @@ from main import predict_user_savings, main
 class TestPredictUserSavings:
     """Tests for predict_user_savings function"""
     
+    @patch('main.get_user_details')
     @patch('main.validate_user_exists')
     @patch('main.os.path.exists')
     @patch('main.load_and_predict')
@@ -20,6 +21,7 @@ class TestPredictUserSavings:
         mock_load_predict,
         mock_exists,
         mock_validate,
+        mock_get_user_details,
         sample_timeseries_data,
         sample_monthly_df
     ):
@@ -29,6 +31,7 @@ class TestPredictUserSavings:
         mock_exists.return_value = True
         mock_load_predict.return_value = (7500.0, [7500.0])
         mock_get_timeseries.return_value = (sample_timeseries_data, sample_monthly_df)
+        mock_get_user_details.return_value = {'User ID': 0, 'Person': 'Test User'}
         
         # Call function
         result = predict_user_savings(0, 'test.csv')
@@ -39,7 +42,9 @@ class TestPredictUserSavings:
         assert 'last_month_savings' in result
         assert 'average_savings' in result
         assert result['predicted_next_month_savings'] == 7500.0
+        assert result['user_details']['User ID'] == 0
     
+    @patch('main.get_user_details')
     @patch('main.validate_user_exists')
     @patch('main.os.path.exists')
     @patch('main.get_user_savings_timeseries')
@@ -50,6 +55,7 @@ class TestPredictUserSavings:
         mock_get_timeseries,
         mock_exists,
         mock_validate,
+        mock_get_user_details,
         sample_timeseries_data,
         sample_monthly_df
     ):
@@ -58,12 +64,13 @@ class TestPredictUserSavings:
         mock_validate.return_value = True
         mock_exists.return_value = False
         mock_get_timeseries.return_value = (sample_timeseries_data, sample_monthly_df)
+        mock_get_user_details.return_value = {'User ID': 0, 'Person': 'Test User'}
         
         # Create mock predictor
         mock_predictor = MagicMock()
         mock_predictor.predict.return_value = (7500.0, [7500.0])
         mock_predictor.get_model_summary.return_value = {'aic': 100.0}
-        mock_train_save.return_value = (mock_predictor, 'src/model_user_0.pkl')
+        mock_train_save.return_value = (mock_predictor, 'src/models/model_user_0.pkl')
         
         # Call function
         result = predict_user_savings(0, 'test.csv')
@@ -72,6 +79,7 @@ class TestPredictUserSavings:
         assert result['user_id'] == 0
         assert 'predicted_next_month_savings' in result
         assert result['predicted_next_month_savings'] == 7500.0
+        assert result['user_details']['Person'] == 'Test User'
         mock_train_save.assert_called_once()
     
     @patch('main.validate_user_exists')
@@ -84,6 +92,7 @@ class TestPredictUserSavings:
         with pytest.raises(ValueError, match="User 999 is not trained"):
             predict_user_savings(999, 'test.csv')
     
+    @patch('main.get_user_details')
     @patch('main.validate_user_exists')
     @patch('main.os.path.exists')
     @patch('main.get_user_savings_timeseries')
@@ -92,6 +101,7 @@ class TestPredictUserSavings:
         mock_get_timeseries,
         mock_exists,
         mock_validate,
+        mock_get_user_details,
         sample_timeseries_data,
         sample_monthly_df
     ):
@@ -99,12 +109,13 @@ class TestPredictUserSavings:
         mock_validate.return_value = True
         mock_exists.return_value = False
         mock_get_timeseries.return_value = (sample_timeseries_data, sample_monthly_df)
+        mock_get_user_details.return_value = {'User ID': 0, 'Person': 'Test User'}
         
         with patch('main.train_and_save_model') as mock_train:
             mock_predictor = MagicMock()
             mock_predictor.predict.return_value = (7500.0, [7500.0])
             mock_predictor.get_model_summary.return_value = {'aic': 100.0}
-            mock_train.return_value = (mock_predictor, 'src/model_user_0.pkl')
+            mock_train.return_value = (mock_predictor, 'src/models/model_user_0.pkl')
             
             result = predict_user_savings(0, 'test.csv')
             
@@ -118,7 +129,8 @@ class TestPredictUserSavings:
                 'average_savings',
                 'std_savings',
                 'n_months',
-                'model_filepath'
+                'model_filepath',
+                'user_details'
             ]
             
             for field in required_fields:
@@ -194,6 +206,7 @@ class TestIntegration:
 class TestMainErrorHandling:
     """Tests for error handling edge cases"""
     
+    @patch('main.get_user_details')
     @patch('main.validate_user_exists')
     @patch('main.os.path.exists')
     @patch('main.load_and_predict')
@@ -204,12 +217,14 @@ class TestMainErrorHandling:
         mock_load_predict,
         mock_exists,
         mock_validate,
+        mock_get_user_details,
         sample_timeseries_data,
         sample_monthly_df
     ):
         """Test that model load failure triggers retraining (lines 66-69)"""
         mock_validate.return_value = True
         mock_exists.return_value = True
+        mock_get_user_details.return_value = {'User ID': 0, 'Person': 'Test User'}
         # Make load_and_predict fail
         mock_load_predict.side_effect = Exception("Model corrupted")
         mock_get_timeseries.return_value = (sample_timeseries_data, sample_monthly_df)
@@ -218,7 +233,7 @@ class TestMainErrorHandling:
             mock_predictor = MagicMock()
             mock_predictor.predict.return_value = (7500.0, [7500.0])
             mock_predictor.get_model_summary.return_value = {'aic': 100.0}
-            mock_train.return_value = (mock_predictor, 'src/model_user_0.pkl')
+            mock_train.return_value = (mock_predictor, 'src/models/model_user_0.pkl')
             
             result = predict_user_savings(0, 'test.csv')
             
@@ -226,6 +241,7 @@ class TestMainErrorHandling:
             mock_train.assert_called_once()
             assert result['predicted_next_month_savings'] == 7500.0
     
+    @patch('main.get_user_details')
     @patch('main.validate_user_exists')
     @patch('main.os.path.exists')
     @patch('main.get_user_savings_timeseries')
@@ -236,6 +252,7 @@ class TestMainErrorHandling:
         mock_get_timeseries,
         mock_exists,
         mock_validate,
+        mock_get_user_details,
         sample_timeseries_data,
         sample_monthly_df
     ):
@@ -243,12 +260,13 @@ class TestMainErrorHandling:
         mock_validate.return_value = True
         mock_exists.return_value = False
         mock_get_timeseries.return_value = (sample_timeseries_data, sample_monthly_df)
+        mock_get_user_details.return_value = {'User ID': 0, 'Person': 'Test User'}
         
         # Create mock predictor that fails on get_model_summary
         mock_predictor = MagicMock()
         mock_predictor.predict.return_value = (7500.0, [7500.0])
         mock_predictor.get_model_summary.side_effect = Exception("Summary failed")
-        mock_train_save.return_value = (mock_predictor, 'src/model_user_0.pkl')
+        mock_train_save.return_value = (mock_predictor, 'src/models/model_user_0.pkl')
         
         # Should not raise exception, just skip printing AIC
         result = predict_user_savings(0, 'test.csv')

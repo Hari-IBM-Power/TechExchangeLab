@@ -9,12 +9,17 @@ import os
 from src.data_engineering import (
     get_user_savings_timeseries,
     validate_user_exists,
-    get_available_users
+    get_available_users,
+    get_user_details
 )
 from src.ml_model import train_and_save_model, load_and_predict
 
 
-def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_salary_filtered.csv') -> dict:
+def predict_user_savings(
+    user_id: int,
+    data_filepath: str = 'src/data/transactions_2025_salary_filtered.csv',
+    user_filepath: str = 'src/data/sd254_users.csv'
+) -> dict:
     """
     Predict next month's savings for a user
     - If model exists: load and predict
@@ -27,6 +32,8 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
         User ID to predict savings for
     data_filepath : str
         Path to the transaction data CSV file
+    user_filepath : str
+        Path to the user details CSV file
         
     Returns:
     --------
@@ -50,9 +57,12 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
     print(f"✓ User {user_id} found in dataset")
     
     # Check if model exists
-    model_filepath = f"src/model_user_{user_id}.pkl"
+    model_filepath = f"src/models/model_user_{user_id}.pkl"
     model_exists = os.path.exists(model_filepath)
     
+    monthly_df = None
+    next_month_savings = None
+
     if model_exists:
         # Load existing model
         print(f"✓ Model found: {model_filepath}")
@@ -78,10 +88,13 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
             ts_data, monthly_df = get_user_savings_timeseries(data_filepath, user_id)
             
             print(f"✓ Loaded {len(ts_data)} months of data")
-            print(f"  Date range: {ts_data.index[0].strftime('%Y-%m')} to {ts_data.index[-1].strftime('%Y-%m')}")
+            print(
+                f"  Date range: {monthly_df.iloc[0]['Date'].strftime('%Y-%m')} "
+                f"to {monthly_df.iloc[-1]['Date'].strftime('%Y-%m')}"
+            )
             
             # Train and save model
-            predictor, saved_path = train_and_save_model(ts_data, user_id, save_dir='src')
+            predictor, saved_path = train_and_save_model(ts_data, user_id, save_dir='src/models')
             
             print(f"✓ Model trained and saved to {saved_path}")
             
@@ -98,6 +111,9 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
         except Exception as e:
             raise ValueError(f"Error training model for user {user_id}: {e}")
     
+    if monthly_df is None or next_month_savings is None:
+        raise ValueError(f"Incomplete prediction data for user {user_id}")
+
     # Prepare results
     last_month = monthly_df.iloc[-1]
     last_month_date = last_month['Date'].strftime('%Y-%m')
@@ -105,8 +121,9 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
     last_month_balance = last_month['EndBalance']
     
     # Calculate statistics
-    avg_savings = monthly_df['Savings'].mean()
-    std_savings = monthly_df['Savings'].std()
+    savings_values = monthly_df['Savings'].tolist()
+    avg_savings = sum(savings_values) / len(savings_values)
+    std_savings = monthly_df['Savings'].astype(float).std()
     
     # Display results
     print(f"\n{'='*60}")
@@ -122,15 +139,18 @@ def predict_user_savings(user_id: int, data_filepath: str = 'transactions_2025_s
     print(f"PREDICTED NEXT MONTH SAVINGS: ₹{next_month_savings:,.2f}")
     print(f"{'─'*60}\n")
     
+    user_details = get_user_details(user_filepath, user_id)
+
     # Prepare return dictionary
     results = {
         'user_id': user_id,
+        'user_details': user_details,
         'predicted_next_month_savings': float(next_month_savings),
         'last_month_savings': float(last_month_savings),
         'last_month_balance': float(last_month_balance),
         'last_month_date': last_month_date,
-        'average_savings': float(avg_savings),
-        'std_savings': float(std_savings),
+        'average_savings': avg_savings,
+        'std_savings': std_savings,
         'n_months': len(monthly_df),
         'model_filepath': model_filepath
     }

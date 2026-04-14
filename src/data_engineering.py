@@ -5,7 +5,7 @@ Handles data loading, preprocessing, and feature engineering for user savings pr
 
 import pandas as pd
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 
 def load_transaction_data(filepath: str) -> pd.DataFrame:
@@ -189,5 +189,36 @@ def get_available_users(filepath: str) -> list:
     """
     df = pd.read_csv(filepath)
     return sorted(df['User'].unique().tolist())
+
+
+def get_user_details(filepath: str, user_id: int) -> Dict:
+    """
+    Get user profile details for a specific user from the users CSV.
+
+    Parameters:
+    -----------
+    filepath : str
+        Path to user details CSV
+    user_id : int
+        User ID to look up
+
+    Returns:
+    --------
+    Dict
+        User details as a dictionary
+    """
+    df = pd.read_csv(filepath)
+    user_row = df[df['User ID'] == user_id]
+
+    if user_row.empty:
+        raise ValueError(f"No user details found for user {user_id}")
+
+    user_details = user_row.iloc[0].to_dict()
+
+    for key, value in user_details.items():
+        if pd.isna(value):
+            user_details[key] = None
+
+    return user_details
 
 # Made with Bob

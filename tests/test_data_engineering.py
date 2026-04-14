@@ -11,7 +11,8 @@ from src.data_engineering import (
     prepare_timeseries_data,
     get_user_savings_timeseries,
     validate_user_exists,
-    get_available_users
+    get_available_users,
+    get_user_details
 )
 
 
@@ -127,14 +128,16 @@ class TestPrepareTimeseriesData:
     
     def test_timeseries_frequency(self, sample_monthly_df):
         """Test that time series has monthly frequency"""
-        ts_data, _ = prepare_timeseries_data(sample_monthly_df)
-        assert ts_data.index.freq == 'MS' or ts_data.index.inferred_freq == 'MS'
+        ts_data, ts_index = prepare_timeseries_data(sample_monthly_df)
+        assert isinstance(ts_index, pd.DatetimeIndex)
+        assert str(ts_index.freq) == 'MS' or ts_index.inferred_freq == 'MS'
     
     def test_timeseries_values_match(self, sample_monthly_df):
         """Test that time series values match the Savings column"""
         ts_data, _ = prepare_timeseries_data(sample_monthly_df)
-        expected_values = sample_monthly_df['Savings'].values
-        np.testing.assert_array_almost_equal(ts_data.values, expected_values)
+        expected_values = sample_monthly_df['Savings'].astype(float).to_numpy()
+        actual_values = ts_data.astype(float).to_numpy()
+        np.testing.assert_array_almost_equal(actual_values, expected_values)
 
 
 class TestGetUserSavingsTimeseries:
@@ -193,5 +196,25 @@ class TestGetAvailableUsers:
         """Test that users are returned in sorted order"""
         users = get_available_users(sample_csv_file)
         assert users == sorted(users)
+
+class TestGetUserDetails:
+    """Tests for get_user_details function"""
+
+    def test_get_user_details_returns_dict(self):
+        """Test that function returns a user details dictionary"""
+        user_details = get_user_details('src/data/sd254_users.csv', user_id=0)
+        assert isinstance(user_details, dict)
+
+    def test_get_user_details_valid_user(self):
+        """Test fetching details for an existing user"""
+        user_details = get_user_details('src/data/sd254_users.csv', user_id=1)
+        assert user_details['User ID'] == 1
+        assert user_details['Person'] == 'Sasha Sadr'
+
+    def test_get_user_details_invalid_user(self):
+        """Test that missing user details raises ValueError"""
+        with pytest.raises(ValueError, match="No user details found for user"):
+            get_user_details('src/data/sd254_users.csv', user_id=999)
+
 
 # Made with Bob
