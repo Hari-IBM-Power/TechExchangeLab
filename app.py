@@ -5,6 +5,7 @@ Provides REST API endpoint to predict next month's savings for users
 
 import os
 import tempfile
+from datetime import datetime
 
 import joblib
 import pandas as pd
@@ -16,6 +17,7 @@ from src.pdf_embedding_pipeline import (
     PDFEmbeddingPipelineError,
     process_pdf_file,
 )
+from src.document_retrieval import retrieve_documents, rerank_documents
 
 app = Flask(__name__)
 
@@ -212,6 +214,165 @@ def create_pdf_embeddings():
             except OSError:
                 pass
 
+@app.route('/retrieve', methods=['POST'])
+def retrieve_endpoint():
+    """
+    POST /retrieve endpoint
+    
+    Retrieve document chunks without LLM generation.
+    Supports configurable retrieval and reranking parameters.
+    
+    Request Body (JSON):
+    {
+        "query": str (required),
+        "collection_name": str (optional, default: "pdf_documents"),
+        "top_k": int (optional, default: 20),
+        "rerank_top_k": int (optional, default: 5),
+        "include_scores": bool (optional, default: false),
+        "include_metadata": bool (optional, default: false)
+    }
+    
+    Response (JSON):
+    Success (200):
+    {
+        "success": true,
+        "query": str,
+        "chunks": [
+            {
+                "content": str,
+                "rank": int,
+                "score": float (if include_scores=true),
+                "metadata": dict (if include_metadata=true)
+            }
+        ],
+        "total_retrieved": int,
+        "total_reranked": int,
+        "timestamp": str
+    }
+    
+    Error (400/500):
+    {
+        "success": false,
+        "error": str
+    }
+    """
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+        
+        # Validate request body
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Request body must be JSON'
+            }), 400
+        
+        # Validate required parameters
+        if 'query' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Missing required parameter: query'
+            }), 400
+        
+        query = data['query']
+        if not isinstance(query, str) or not query.strip():
+            return jsonify({
+                'success': False,
+                'error': 'query must be a non-empty string'
+            }), 400
+        
+        # Get optional parameters with defaults
+        collection_name = data.get('collection_name', DEFAULT_COLLECTION_NAME)
+        top_k = data.get('top_k', 20)
+        rerank_top_k = data.get('rerank_top_k', 5)
+        include_scores = data.get('include_scores', False)
+        include_metadata = data.get('include_metadata', False)
+        
+        # Validate parameter types
+        if not isinstance(top_k, int) or top_k <= 0:
+            return jsonify({
+                'success': False,
+                'error': 'top_k must be a positive integer'
+            }), 400
+        
+        if not isinstance(rerank_top_k, int) or rerank_top_k <= 0:
+            return jsonify({
+                'success': False,
+                'error': 'rerank_top_k must be a positive integer'
+            }), 400
+        
+        if rerank_top_k > top_k:
+            return jsonify({
+                'success': False,
+                'error': 'rerank_top_k cannot be greater than top_k'
+            }), 400
+        
+        # Retrieve documents
+        try:
+            documents = retrieve_documents(
+                query=query,
+                collection_name=collection_name,
+                top_k=top_k,
+            )
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Document retrieval failed: {str(e)}'
+            }), 400
+        
+        total_retrieved = len(documents)
+        
+        # Rerank documents if we have results
+        if documents:
+            try:
+                documents = rerank_documents(
+                    query=query,
+                    documents=documents,
+                    top_k=rerank_top_k,
+                )
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Document reranking failed: {str(e)}'
+                }), 500
+        
+        total_reranked = len(documents)
+        
+        # Format chunks for response
+        chunks = []
+        for doc in documents:
+            chunk = {
+                'content': doc['content'],
+                'rank': doc['rank'],
+            }
+            
+            if include_scores and 'rerank_score' in doc:
+                chunk['score'] = doc['rerank_score']
+            
+            if include_metadata and 'metadata' in doc:
+                chunk['metadata'] = doc['metadata']
+            
+            chunks.append(chunk)
+        
+        # Build response
+        response = {
+            'success': True,
+            'query': query,
+            'chunks': chunks,
+            'total_retrieved': total_retrieved,
+            'total_reranked': total_reranked,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+        }
+        
+        return jsonify(response), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Internal server error: {str(e)}'
+        }), 500
+
+
 
 @app.route('/predict', methods=['POST'])
 def predict_savings_plan():
@@ -354,6 +515,42 @@ def index():
                     'collection_name': 'string (optional)',
                     'db_path': 'string (optional, default ./db)',
                     'output_dir': 'string (optional)'
+                }
+            },
+            'POST /retrieve': {
+                'description': 'Retrieve document chunks without LLM generation, with configurable retrieval and reranking',
+                'parameters': {
+                    'query': 'string (required) - search query',
+                    'collection_name': 'string (optional, default: pdf_documents)',
+                    'top_k': 'integer (optional, default: 20) - number of documents to retrieve',
+                    'rerank_top_k': 'integer (optional, default: 5) - number of documents after reranking',
+                    'include_scores': 'boolean (optional, default: false) - include relevance scores',
+                    'include_metadata': 'boolean (optional, default: false) - include document metadata'
+                },
+                'example': {
+                    'request': {
+                        'query': 'retirement planning strategies',
+                        'collection_name': 'pdf_documents',
+                        'top_k': 20,
+                        'rerank_top_k': 5,
+                        'include_scores': True,
+                        'include_metadata': True
+                    },
+                    'response': {
+                        'success': True,
+                        'query': 'retirement planning strategies',
+                        'chunks': [
+                            {
+                                'content': 'Document content...',
+                                'rank': 1,
+                                'score': 0.95,
+                                'metadata': {'filename': 'document', 'chunk_index': 0}
+                            }
+                        ],
+                        'total_retrieved': 20,
+                        'total_reranked': 5,
+                        'timestamp': '2026-04-14T08:45:00.000Z'
+                    }
                 }
             },
             'GET /health': {
