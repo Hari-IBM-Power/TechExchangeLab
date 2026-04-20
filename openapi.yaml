@@ -1,0 +1,526 @@
+openapi: 3.0.3
+info:
+  title: User Savings Prediction API
+  description: |
+    Flask API for User Savings Prediction and Document Retrieval.
+    
+    This API provides endpoints to:
+    - Predict next month's savings for users using Exponential Smoothing
+    - Classify savings plans based on user features
+    - Process PDF documents and generate embeddings
+    - Retrieve and rerank document chunks for RAG applications
+    
+    The service uses machine learning models for time series forecasting and classification,
+    along with ChromaDB for document storage and retrieval.
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: http://<Update the IP here>:9476
+    description: Production server
+  - url: http://localhost:9476
+    description: Local development server
+
+tags:
+  - name: Savings Prediction
+    description: Endpoints for predicting user savings
+  - name: Classification
+    description: Endpoints for savings plan classification
+  - name: Document Processing
+    description: Endpoints for PDF processing and document retrieval
+  - name: Health
+    description: Health check and API information
+
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: API Documentation
+      description: Returns API documentation with available endpoints and examples
+      operationId: getApiDocumentation
+      responses:
+        '200':
+          description: API documentation retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: User Savings Prediction API
+                  version:
+                    type: string
+                    example: 1.0.0
+                  endpoints:
+                    type: object
+                    description: Available API endpoints with descriptions
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Simple health check to verify the API is running
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: User Savings Prediction API
+
+  /savings:
+    post:
+      tags:
+        - Savings Prediction
+      summary: Predict Next Month Savings
+      description: |
+        Predict next month's savings for a specific user using Exponential Smoothing time series model.
+        
+        The endpoint will:
+        - Load an existing trained model if available
+        - Train a new model if the user exists but no model is found
+        - Return an error if the user doesn't exist in the dataset
+      operationId: predictUserSavings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+              properties:
+                user_id:
+                  type: integer
+                  description: User ID to predict savings for
+                  example: 6
+            examples:
+              validRequest:
+                summary: Valid prediction request
+                value:
+                  user_id: 6
+      responses:
+        '200':
+          description: Prediction successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user_id:
+                    type: integer
+                    example: 6
+                  user_details:
+                    type: object
+                    description: User profile information
+                    additionalProperties: true
+                  predicted_next_month_savings:
+                    type: number
+                    format: float
+                    description: Predicted savings for next month
+                    example: 15000.50
+                  last_month_savings:
+                    type: number
+                    format: float
+                    description: Actual savings from last month
+                    example: 14500.00
+                  last_month_balance:
+                    type: number
+                    format: float
+                    description: Account balance at end of last month
+                    example: 125000.00
+                  last_month_date:
+                    type: string
+                    description: Date of last month in YYYY-MM format
+                    example: "2025-03"
+                  average_savings:
+                    type: number
+                    format: float
+                    description: Average monthly savings over historical period
+                    example: 14000.00
+                  std_savings:
+                    type: number
+                    format: float
+                    description: Standard deviation of monthly savings
+                    example: 2500.00
+                  n_months:
+                    type: integer
+                    description: Number of months of historical data used
+                    example: 12
+                  model_filepath:
+                    type: string
+                    description: Path to the trained model file
+                    example: "src/models/model_user_6.pkl"
+        '400':
+          description: Bad request - invalid user_id or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUserId:
+                  summary: Missing user_id parameter
+                  value:
+                    success: false
+                    error: "Missing required parameter: user_id"
+                invalidUserId:
+                  summary: Invalid user_id type
+                  value:
+                    success: false
+                    error: "user_id must be an integer"
+                    user_id: "abc"
+                userNotFound:
+                  summary: User not found in dataset
+                  value:
+                    success: false
+                    error: "User 999 is not trained. User not found in dataset. Available users: [1, 2, 3, 4, 5, 6]"
+                    user_id: 999
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /predict:
+    post:
+      tags:
+        - Classification
+      summary: Predict Savings Plan Classification
+      description: |
+        Predict savings plan classification based on user features using a trained classifier model.
+        
+        Requires 13 feature values in the following order:
+        1. Current Age
+        2. Retirement Age
+        3. Birth Year
+        4. Birth Month
+        5. Gender
+        6. City
+        7. State
+        8. Zipcode
+        9. Per Capita Income - Zipcode
+        10. Yearly Income - Person
+        11. Total Debt
+        12. FICO Score
+        13. Savings Plan
+      operationId: predictSavingsPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - features
+              properties:
+                features:
+                  type: array
+                  description: Array of 13 feature values
+                  items:
+                    oneOf:
+                      - type: number
+                      - type: string
+                  minItems: 13
+                  maxItems: 13
+            examples:
+              validRequest:
+                summary: Valid classification request
+                value:
+                  features: [45, 65, 1979, 6, "Male", "New York", "NY", "10001", 75000, 120000, 50000, 720, "Plan A"]
+      responses:
+        '200':
+          description: Classification successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  prediction:
+                    type: array
+                    description: Predicted savings plan class
+                    items:
+                      type: string
+                    example: ["Plan A"]
+        '400':
+          description: Bad request - missing or invalid features
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error or model not loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                modelNotLoaded:
+                  summary: Model not loaded
+                  value:
+                    success: false
+                    error: "Savings plan classifier model not loaded"
+
+  /pdf/embeddings:
+    post:
+      tags:
+        - Document Processing
+      summary: Process PDF and Generate Embeddings
+      description: |
+        Upload a PDF file, convert it to markdown, chunk the content, generate embeddings,
+        and store them in ChromaDB for later retrieval.
+        
+        The pipeline:
+        1. Converts PDF to markdown
+        2. Chunks the markdown content
+        3. Generates embeddings using sentence transformers
+        4. Stores embeddings in ChromaDB collection
+      operationId: createPdfEmbeddings
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to process
+                collection_name:
+                  type: string
+                  description: Target ChromaDB collection name
+                  default: pdf_documents
+                db_path:
+                  type: string
+                  description: ChromaDB persistence directory path
+                  default: ./db
+                output_dir:
+                  type: string
+                  description: Directory to save markdown output (optional)
+      responses:
+        '200':
+          description: PDF processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  pdf_path:
+                    type: string
+                    description: Path to the uploaded PDF
+                  markdown_path:
+                    type: string
+                    description: Path to the generated markdown file
+                  collection_name:
+                    type: string
+                    description: ChromaDB collection name
+                  chunks_stored:
+                    type: integer
+                    description: Number of chunks stored
+                    example: 42
+        '400':
+          description: Bad request - missing file or invalid PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFile:
+                  summary: Missing file field
+                  value:
+                    success: false
+                    error: "Missing required file field: file"
+                invalidFileType:
+                  summary: Invalid file type
+                  value:
+                    success: false
+                    error: "Uploaded file must be a PDF"
+        '500':
+          description: Internal server error during processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /retrieve:
+    post:
+      tags:
+        - Document Processing
+      summary: Retrieve Document Chunks
+      description: |
+        Retrieve document chunks from ChromaDB without LLM generation.
+        Supports configurable retrieval and reranking parameters.
+        
+        The process:
+        1. Retrieves top_k documents from ChromaDB using semantic search
+        2. Reranks documents using cross-encoder model
+        3. Returns top rerank_top_k documents with optional scores and metadata
+      operationId: retrieveDocuments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: Search query string
+                  example: "retirement planning strategies"
+                collection_name:
+                  type: string
+                  description: ChromaDB collection name
+                  default: pdf_documents
+                top_k:
+                  type: integer
+                  description: Number of documents to retrieve initially
+                  default: 20
+                  minimum: 1
+                rerank_top_k:
+                  type: integer
+                  description: Number of documents to return after reranking
+                  default: 5
+                  minimum: 1
+                include_scores:
+                  type: boolean
+                  description: Include relevance scores in response
+                  default: false
+                include_metadata:
+                  type: boolean
+                  description: Include document metadata in response
+                  default: false
+            examples:
+              basicRequest:
+                summary: Basic retrieval request
+                value:
+                  query: "retirement planning strategies"
+              fullRequest:
+                summary: Full request with all parameters
+                value:
+                  query: "retirement planning strategies"
+                  collection_name: "pdf_documents"
+                  top_k: 20
+                  rerank_top_k: 5
+                  include_scores: true
+                  include_metadata: true
+      responses:
+        '200':
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  query:
+                    type: string
+                    description: Original search query
+                    example: "retirement planning strategies"
+                  chunks:
+                    type: array
+                    description: Retrieved and reranked document chunks
+                    items:
+                      type: object
+                      properties:
+                        content:
+                          type: string
+                          description: Document content
+                        rank:
+                          type: integer
+                          description: Rank after reranking (1-indexed)
+                        score:
+                          type: number
+                          format: float
+                          description: Relevance score (if include_scores=true)
+                        metadata:
+                          type: object
+                          description: Document metadata (if include_metadata=true)
+                          additionalProperties: true
+                  total_retrieved:
+                    type: integer
+                    description: Total number of documents retrieved initially
+                    example: 20
+                  total_reranked:
+                    type: integer
+                    description: Total number of documents after reranking
+                    example: 5
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the retrieval in ISO 8601 format
+                    example: "2026-04-14T08:45:00.000Z"
+        '400':
+          description: Bad request - missing query or invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingQuery:
+                  summary: Missing query parameter
+                  value:
+                    success: false
+                    error: "Missing required parameter: query"
+                invalidTopK:
+                  summary: Invalid top_k value
+                  value:
+                    success: false
+                    error: "top_k must be a positive integer"
+                rerankTooLarge:
+                  summary: rerank_top_k greater than top_k
+                  value:
+                    success: false
+                    error: "rerank_top_k cannot be greater than top_k"
+        '500':
+          description: Internal server error during retrieval or reranking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message describing what went wrong
+        user_id:
+          type: integer
+          description: User ID if provided in request (optional)
+      required:
+        - success
+        - error
+
+# Made with Bob
