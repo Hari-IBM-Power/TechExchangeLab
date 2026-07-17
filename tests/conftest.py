@@ -1,12 +1,9 @@
 """
 Pytest configuration and shared fixtures
 """
+# pylint: disable=duplicate-code
 import pytest
 import pandas as pd
-import numpy as np
-from datetime import datetime
-import os
-import tempfile
 
 
 @pytest.fixture
@@ -27,7 +24,7 @@ def sample_transaction_data():
 
 
 @pytest.fixture
-def sample_csv_file(sample_transaction_data, tmp_path):
+def sample_csv_file(sample_transaction_data, tmp_path):  # pylint: disable=redefined-outer-name
     """Create a temporary CSV file with sample data"""
     csv_path = tmp_path / "test_transactions.csv"
     sample_transaction_data.to_csv(csv_path, index=False)
@@ -49,9 +46,15 @@ def sample_monthly_df():
     data = {
         'Year': [2025] * 12,
         'Month': list(range(1, 13)),
-        'Savings': [5000, 6000, 5500, 7000, 6500, 7500, 8000, 7200, 8500, 9000, 8800, 9200],
-        'EndBalance': [5000, 11000, 16500, 23500, 30000, 37500, 45500, 52700, 61200, 70200, 79000, 88200],
-        'StartBalance': [0, 5000, 11000, 16500, 23500, 30000, 37500, 45500, 52700, 61200, 70200, 79000],
+        'Savings': [
+            5000, 6000, 5500, 7000, 6500, 7500, 8000, 7200, 8500, 9000, 8800, 9200
+        ],
+        'EndBalance': [
+            5000, 11000, 16500, 23500, 30000, 37500, 45500, 52700, 61200, 70200, 79000, 88200
+        ],
+        'StartBalance': [
+            0, 5000, 11000, 16500, 23500, 30000, 37500, 45500, 52700, 61200, 70200, 79000
+        ],
         'Date': pd.date_range(start='2025-01-01', periods=12, freq='MS')
     }
     return pd.DataFrame(data)
@@ -68,13 +71,13 @@ def temp_model_dir(tmp_path):
 @pytest.fixture
 def mock_flask_app():
     """Create a test Flask app instance"""
-    from app import app
+    from app import app  # pylint: disable=import-outside-toplevel
     app.config['TESTING'] = True
     return app
 
 
 @pytest.fixture
-def flask_client(mock_flask_app):
+def flask_client(mock_flask_app):  # pylint: disable=redefined-outer-name
     """Create a test client for Flask app"""
     return mock_flask_app.test_client()
 

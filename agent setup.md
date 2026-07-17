@@ -1,4 +1,4 @@
-# Instructions for setting up an agent.
+# Instructions for setting up an agent
 
 ## Agent creation
 

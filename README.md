@@ -5,18 +5,21 @@ A comprehensive machine learning system for predicting user savings using time s
 ## 🌟 Features
 
 ### 1. **Savings Prediction API**
+
 - Predict next month's savings for users using Exponential Smoothing
 - Automatic model training for new users
 - RESTful API with Flask
 - Historical savings analysis and statistics
 
 ### 2. **PDF Embedding Pipeline**
+
 - Convert PDF documents to markdown
 - Intelligent document chunking with section awareness
 - Generate embeddings using sentence transformers
 - Store embeddings in ChromaDB for semantic search
 
 ### 3. **Savings Plan Classifier**
+
 - Machine learning classifier for retirement savings plans
 - Handles demographic and financial features
 - Logistic regression with preprocessing pipeline
@@ -36,29 +39,34 @@ A comprehensive machine learning system for predicting user savings using time s
 ## 🚀 Installation
 
 ### Prerequisites
+
 - Python 3.8+
 - pip package manager
 
 ### Setup
 
 1. **Clone the repository**
+
 ```bash
 git clone <repository-url>
 cd "TCC Timeseries"
 ```
 
-2. **Create virtual environment**
+1. **Create virtual environment**
+
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-3. **Install dependencies**
+1. **Install dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Install test dependencies (optional)**
+1. **Install test dependencies (optional)**
+
 ```bash
 pip install -r requirements-test.txt
 ```
@@ -92,6 +100,7 @@ Edit the `user_id` in `main.py` to predict for different users.
 ## 📚 API Documentation
 
 ### Base URL
+
 ```
 http://localhost:9476
 ```
@@ -99,9 +108,11 @@ http://localhost:9476
 ### Endpoints
 
 #### 1. **GET /** - API Documentation
+
 Returns API information and available endpoints.
 
 **Response:**
+
 ```json
 {
   "service": "User Savings Prediction API",
@@ -111,9 +122,11 @@ Returns API information and available endpoints.
 ```
 
 #### 2. **GET /health** - Health Check
+
 Check if the API is running.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -122,9 +135,11 @@ Check if the API is running.
 ```
 
 #### 3. **POST /savings** - Predict User Savings
+
 Predict next month's savings for a specific user.
 
 **Request:**
+
 ```json
 {
   "user_id": 6
@@ -132,6 +147,7 @@ Predict next month's savings for a specific user.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -149,9 +165,11 @@ Predict next month's savings for a specific user.
 ```
 
 #### 4. **POST /predict** - Savings Plan Classification
+
 Predict savings plan based on user features.
 
 **Request:**
+
 ```json
 {
   "features": [
@@ -162,6 +180,7 @@ Predict savings plan based on user features.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -170,15 +189,18 @@ Predict savings plan based on user features.
 ```
 
 #### 5. **POST /pdf/embeddings** - Process PDF Document
+
 Upload a PDF, convert to markdown, chunk, and store embeddings.
 
 **Request:** (multipart/form-data)
+
 - `file`: PDF file (required)
 - `collection_name`: ChromaDB collection name (optional)
 - `db_path`: Database path (optional, default: ./db)
 - `output_dir`: Markdown output directory (optional)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -298,41 +320,80 @@ print(f"Average tokens per chunk: {result['average_tokens_per_chunk']:.1f}")
 
 ## 🧪 Testing
 
-The project includes comprehensive unit tests with **134 tests** and **100% pass rate**.
+The project includes comprehensive unit tests with **119 tests** and **100% coverage**.
+
+### Install Test Dependencies
+
+```bash
+pip install -r requirements-test.txt
+```
 
 ### Run All Tests
+
 ```bash
 pytest
 ```
 
-### Run with Coverage
+### Run with Verbose Output
+
 ```bash
-pytest --cov=src --cov=app --cov=main --cov-report=html --cov-report=term
+pytest -v
 ```
 
-### Run Specific Test File
+### Run with Coverage Report (terminal)
+
+```bash
+pytest --cov=app --cov=main --cov=src --cov-report=term-missing
+```
+
+### Run with Coverage Report (HTML)
+
+```bash
+pytest --cov=app --cov=main --cov=src --cov-report=html
+# Report is generated at htmlcov/index.html
+```
+
+### Run a Specific Test File
+
 ```bash
 pytest tests/test_app.py -v
+pytest tests/test_main.py -v
+pytest tests/test_data_engineering.py -v
+pytest tests/test_ml_model.py -v
+pytest tests/test_train_savings_plan_classifier.py -v
 ```
 
-### Run Specific Test
+### Run a Specific Test Class or Case
+
 ```bash
-pytest tests/test_app.py::TestSavingsEndpoint::test_valid_user_prediction -v
+pytest tests/test_app.py::TestSavingsEndpoint -v
+pytest tests/test_app.py::TestSavingsEndpoint::test_savings_endpoint_success -v
 ```
 
-### Test Coverage
-- **test_app.py**: 23 tests - Flask API endpoints
-- **test_main.py**: 12 tests - Main orchestration
-- **test_data_engineering.py**: 20 tests - Data pipeline
-- **test_ml_model.py**: 30 tests - ML models
-- **test_pdf_embedding_pipeline.py**: 49 tests - PDF processing
+### Run Tests Matching a Keyword
+
+```bash
+pytest -k "savings" -v
+```
+
+### Test Coverage Summary
+
+| File | Tests | Coverage |
+|------|-------|----------|
+| `test_app.py` | 33 | `app.py` — 100% |
+| `test_main.py` | 12 | `main.py` — 100% |
+| `test_data_engineering.py` | 25 | `src/data_engineering.py` — 100% |
+| `test_ml_model.py` | 25 | `src/ml_model.py` — 100% |
+| `test_train_savings_plan_classifier.py` | 24 | `src/train_savings_plan_classifier.py` — 100% |
 
 See [tests/README.md](tests/README.md) for detailed test documentation.
 
 ## 📊 Data Requirements
 
 ### Transaction Data Format
+
 CSV file with columns:
+
 - `User`: User ID (integer)
 - `Year`, `Month`, `Day`: Date components
 - `Time`: Transaction time
@@ -340,7 +401,9 @@ CSV file with columns:
 - `Balance`: Account balance after transaction
 
 ### User Data Format
+
 CSV file with columns:
+
 - `User ID`: User identifier
 - `Current Age`, `Retirement Age`: Age information
 - `Birth Year`, `Birth Month`: Birth information
@@ -353,6 +416,7 @@ CSV file with columns:
 ## 🤖 Model Details
 
 ### Exponential Smoothing Model
+
 - **Algorithm**: Holt-Winters Exponential Smoothing
 - **Components**: Trend (additive) + Seasonal (additive)
 - **Seasonal Period**: 12 months
@@ -360,14 +424,16 @@ CSV file with columns:
 - **Metrics**: AIC, BIC, AICC for model selection
 
 ### Savings Plan Classifier
+
 - **Algorithm**: Logistic Regression
-- **Preprocessing**: 
+- **Preprocessing**:
   - Numeric features: Median imputation + Standard scaling
   - Categorical features: Constant imputation + One-hot encoding
 - **Class Balancing**: Balanced class weights
 - **Validation**: Stratified train-test split (80/20)
 
 ### PDF Embedding Model
+
 - **Embedding Model**: sentence-transformers/all-mpnet-base-v2
 - **Tokenizer**: AutoTokenizer from transformers
 - **Chunking**: Token-aware with section context
@@ -377,6 +443,7 @@ CSV file with columns:
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```bash
 # Flask configuration
 FLASK_ENV=development
@@ -392,7 +459,9 @@ CHROMA_COLLECTION=pdf_documents
 ```
 
 ### Model Parameters
+
 Edit in respective modules:
+
 - `src/ml_model.py`: Exponential smoothing parameters
 - `src/train_savings_plan_classifier.py`: Classifier parameters
 - `src/pdf_embedding_pipeline.py`: Embedding and chunking parameters
@@ -402,20 +471,25 @@ Edit in respective modules:
 ### Common Issues
 
 **1. Model not found error**
+
 - Solution: The system will automatically train a model for the user on first prediction
 
 **2. User not found error**
+
 - Solution: Check that the user exists in the transaction data
 - Use `get_available_users()` to see valid user IDs
 
 **3. Import errors**
+
 - Solution: Ensure all dependencies are installed: `pip install -r requirements.txt`
 
 **4. PDF processing fails**
+
 - Solution: Check that docling and related dependencies are installed
 - Verify PDF file is not corrupted
 
 **5. ChromaDB errors**
+
 - Solution: Ensure ChromaDB is installed and database path is writable
 
 ## 📝 API Response Codes
