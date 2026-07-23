@@ -36,10 +36,10 @@ def serve_openapi_spec():
 
 # Load the savings plan classifier model
 SAVINGS_PLAN_MODEL_PATH = "./src/models/savings_plan_classifier.pkl"
-savings_plan_model = None
+SAVINGS_PLAN_MODEL = None
 
 try:
-    savings_plan_model = joblib.load(SAVINGS_PLAN_MODEL_PATH)
+    SAVINGS_PLAN_MODEL = joblib.load(SAVINGS_PLAN_MODEL_PATH)
     print(f"Loaded savings plan classifier from {SAVINGS_PLAN_MODEL_PATH}")  # pragma: no cover
 except Exception as e:  # pylint: disable=broad-except
     print(f"Warning: Could not load savings plan classifier: {e}")
@@ -186,7 +186,7 @@ def predict_savings_plan():
     }
     """
     # Check if model is loaded
-    if savings_plan_model is None:
+    if SAVINGS_PLAN_MODEL is None:
         return jsonify({
             'success': False,
             'error': 'Savings plan classifier model not loaded'
@@ -223,15 +223,15 @@ def predict_savings_plan():
         df = pd.DataFrame([features], columns=pd.Index(SAVINGS_PLAN_FEATURE_NAMES))
 
         # Predict
-        prediction = savings_plan_model.predict(df)
+        prediction = SAVINGS_PLAN_MODEL.predict(df)
 
         return jsonify({
             'success': True,
             'prediction': prediction.tolist()
         }), 200
 
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error("Savings plan prediction failed: %s", e, exc_info=True)
+    except (ValueError, TypeError, AttributeError) as e:
+        logger.error("Savings plan prediction failed: %s", e)
         return jsonify({
             'success': False,
             'error': 'Prediction failed due to invalid input data'

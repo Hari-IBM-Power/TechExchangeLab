@@ -40,7 +40,7 @@ class SavingsPredictor:
         self.use_boxcox = use_boxcox
         self.model = None
         self.fitted_model = None
-        self.training_data = None
+        self.training_data: pd.Series | None = None
 
     def train(self, timeseries_data: pd.Series) -> 'SavingsPredictor':
         """
@@ -117,7 +117,7 @@ class SavingsPredictor:
         Dict
             Dictionary containing model parameters and fit statistics
         """
-        if self.fitted_model is None:
+        if self.fitted_model is None or self.training_data is None:
             raise ValueError("Model must be trained first")
 
         summary = {

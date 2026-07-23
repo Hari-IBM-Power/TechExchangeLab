@@ -3,7 +3,7 @@ Data Engineering Module for Time Series Analysis
 Handles data loading, preprocessing, and feature engineering for user savings prediction
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, cast
 
 import pandas as pd
 
@@ -75,7 +75,8 @@ def calculate_monthly_savings(df: pd.DataFrame, user_id: int) -> pd.DataFrame:
     # Group by year and month
     monthly_data = []
 
-    for (year, month), group in user_df.groupby(['Year', 'Month']):
+    for key, group in user_df.groupby(['Year', 'Month']):
+        year, month = key  # type: ignore[misc]  # groupby multi-key yields tuple
         # Get first and last balance of the month
         start_balance = group.iloc[0]['Balance'] - group.iloc[0]['Amount']
         end_balance = group.iloc[-1]['Balance']
@@ -119,9 +120,9 @@ def prepare_timeseries_data(monthly_df: pd.DataFrame) -> Tuple[pd.Series, pd.Dat
 
     # Ensure the index is a proper datetime index with monthly frequency
     ts_data.index = pd.DatetimeIndex(ts_data.index)
-    ts_data = ts_data.asfreq('MS')  # Month Start frequency
+    ts_data = cast(pd.Series, ts_data.asfreq('MS'))  # Month Start frequency
 
-    return ts_data, ts_data.index
+    return ts_data, cast(pd.DatetimeIndex, ts_data.index)
 
 
 def get_user_savings_timeseries(filepath: str, user_id: int) -> Tuple[pd.Series, pd.DataFrame]:

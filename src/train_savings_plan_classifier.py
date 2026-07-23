@@ -116,7 +116,7 @@ def canonical_key(value):
     return normalize_text(value).lower()
 
 
-def standardize_columns(df):
+def standardize_columns(df) -> pd.DataFrame:
     """Rename dataframe columns to canonical names using COLUMN_ALIASES."""
     df = df.copy()
     df.columns = [normalize_text(col) for col in df.columns]
@@ -138,7 +138,7 @@ def standardize_columns(df):
     return df[CANONICAL_COLUMNS].copy()
 
 
-def clean_dataframe(df):
+def clean_dataframe(df) -> pd.DataFrame:
     """Clean and validate the dataframe, coercing invalid values to NA."""
     df = df.copy()
 

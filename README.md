@@ -1,6 +1,8 @@
 # TCC Timeseries - User Savings Prediction System
 
-A comprehensive machine learning system for predicting user savings using time series analysis, with additional features for PDF document processing and savings plan classification.
+A comprehensive machine learning system for predicting user savings using time series
+analysis, with additional features for PDF document processing and savings plan
+classification.
 
 ## 🌟 Features
 
@@ -36,7 +38,7 @@ A comprehensive machine learning system for predicting user savings using time s
 - [Model Details](#model-details)
 - [Contributing](#contributing)
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -71,7 +73,7 @@ pip install -r requirements.txt
 pip install -r requirements-test.txt
 ```
 
-## 🎯 Quick Start
+## Quick Start
 
 ### Running the API Server
 
@@ -97,11 +99,11 @@ python main.py
 
 Edit the `user_id` in `main.py` to predict for different users.
 
-## 📚 API Documentation
+## API Documentation
 
 ### Base URL
 
-```
+```text
 http://localhost:9476
 ```
 
@@ -216,9 +218,9 @@ Upload a PDF, convert to markdown, chunk, and store embeddings.
 }
 ```
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 TCC Timeseries/
 ├── app.py                          # Flask API server
 ├── main.py                         # Main orchestration script
@@ -256,7 +258,7 @@ TCC Timeseries/
     └── TEST_COVERAGE_SUMMARY.md    # Coverage report
 ```
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Example 1: Predict Savings for User
 
@@ -318,7 +320,7 @@ print(f"Processed {result['chunk_count']} chunks")
 print(f"Average tokens per chunk: {result['average_tokens_per_chunk']:.1f}")
 ```
 
-## 🧪 Testing
+## Testing
 
 The project includes comprehensive unit tests with **119 tests** and **100% coverage**.
 
@@ -379,7 +381,7 @@ pytest -k "savings" -v
 ### Test Coverage Summary
 
 | File | Tests | Coverage |
-|------|-------|----------|
+| ---- | ----- | -------- |
 | `test_app.py` | 33 | `app.py` — 100% |
 | `test_main.py` | 12 | `main.py` — 100% |
 | `test_data_engineering.py` | 25 | `src/data_engineering.py` — 100% |
@@ -388,7 +390,7 @@ pytest -k "savings" -v
 
 See [tests/README.md](tests/README.md) for detailed test documentation.
 
-## 📊 Data Requirements
+## Data Requirements
 
 ### Transaction Data Format
 
@@ -413,7 +415,7 @@ CSV file with columns:
 - `Total Debt`, `FICO Score`: Financial metrics
 - `Savings Plan`: Savings plan category
 
-## 🤖 Model Details
+## Model Details
 
 ### Exponential Smoothing Model
 
@@ -470,25 +472,25 @@ Edit in respective modules:
 
 ### Common Issues
 
-**1. Model not found error**
+#### 1. Model not found error
 
 - Solution: The system will automatically train a model for the user on first prediction
 
-**2. User not found error**
+#### 2. User not found error
 
 - Solution: Check that the user exists in the transaction data
 - Use `get_available_users()` to see valid user IDs
 
-**3. Import errors**
+#### 3. Import errors
 
 - Solution: Ensure all dependencies are installed: `pip install -r requirements.txt`
 
-**4. PDF processing fails**
+#### 4. PDF processing fails
 
 - Solution: Check that docling and related dependencies are installed
 - Verify PDF file is not corrupted
 
-**5. ChromaDB errors**
+#### 5. ChromaDB errors
 
 - Solution: Ensure ChromaDB is installed and database path is writable
 
@@ -522,7 +524,7 @@ Edit in respective modules:
 - [ ] Batch prediction endpoints
 - [ ] Model versioning and A/B testing
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
