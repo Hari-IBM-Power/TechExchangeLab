@@ -1,8 +1,7 @@
 # TCC Timeseries - User Savings Prediction System
 
-A comprehensive machine learning system for predicting user savings using time series
-analysis, with additional features for PDF document processing and savings plan
-classification.
+A machine learning system for predicting user savings using time series analysis,
+with an additional savings plan classification feature.
 
 ## 🌟 Features
 
@@ -13,14 +12,7 @@ classification.
 - RESTful API with Flask
 - Historical savings analysis and statistics
 
-### 2. **PDF Embedding Pipeline**
-
-- Convert PDF documents to markdown
-- Intelligent document chunking with section awareness
-- Generate embeddings using sentence transformers
-- Store embeddings in ChromaDB for semantic search
-
-### 3. **Savings Plan Classifier**
+### 2. **Savings Plan Classifier**
 
 - Machine learning classifier for retirement savings plans
 - Handles demographic and financial features
@@ -31,6 +23,7 @@ classification.
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [API Documentation](#api-documentation)
+- [Swagger UI](#swagger-ui)
 - [Project Structure](#project-structure)
 - [Usage Examples](#usage-examples)
 - [Testing](#testing)
@@ -54,20 +47,20 @@ git clone <repository-url>
 cd "TCC Timeseries"
 ```
 
-1. **Create virtual environment**
+2. **Create virtual environment**
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-1. **Install dependencies**
+3. **Install dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-1. **Install test dependencies (optional)**
+4. **Install test dependencies (optional)**
 
 ```bash
 pip install -r requirements-test.txt
@@ -109,9 +102,9 @@ http://localhost:9476
 
 ### Endpoints
 
-#### 1. **GET /** - API Documentation
+#### 1. **GET /** - API Information
 
-Returns API information and available endpoints.
+Returns service information and a list of available endpoints.
 
 **Response:**
 
@@ -119,7 +112,7 @@ Returns API information and available endpoints.
 {
   "service": "User Savings Prediction API",
   "version": "1.0.0",
-  "endpoints": { ... }
+  "endpoints": { "..." }
 }
 ```
 
@@ -162,20 +155,20 @@ Predict next month's savings for a specific user.
   "std_savings": 2500.00,
   "n_months": 12,
   "model_filepath": "src/models/model_user_6.pkl",
-  "user_details": { ... }
+  "user_details": { "..." }
 }
 ```
 
 #### 4. **POST /predict** - Savings Plan Classification
 
-Predict savings plan based on user features.
+Predict the savings plan for a user based on their demographic and financial features.
 
 **Request:**
 
 ```json
 {
   "features": [
-    45, 65, 1979, 6, "Male", "New York", "NY", 
+    45, 65, 1979, 6, "Male", "New York", "NY",
     "10001", 75000, 120000, 50000, 720, "Plan A"
   ]
 }
@@ -190,33 +183,42 @@ Predict savings plan based on user features.
 }
 ```
 
-#### 5. **POST /pdf/embeddings** - Process PDF Document
+## Swagger UI
 
-Upload a PDF, convert to markdown, chunk, and store embeddings.
+The API ships with an interactive [Swagger UI](https://swagger.io/tools/swagger-ui/) powered by
+[`flask-swagger-ui`](https://github.com/sveint/flask-swagger-ui) and an
+[OpenAPI 3.0](https://swagger.io/specification/) specification file.
 
-**Request:** (multipart/form-data)
+### Accessing the Swagger UI
 
-- `file`: PDF file (required)
-- `collection_name`: ChromaDB collection name (optional)
-- `db_path`: Database path (optional, default: ./db)
-- `output_dir`: Markdown output directory (optional)
+Start the server and open the following URL in your browser:
 
-**Response:**
-
-```json
-{
-  "success": true,
-  "document_name": "document.pdf",
-  "markdown_path": "/path/to/document.md",
-  "collection_name": "pdf_documents",
-  "collection_status": "created",
-  "chunk_count": 45,
-  "average_tokens_per_chunk": 412.5,
-  "inserted_count": 45,
-  "db_path": "./db",
-  "embedding_model": "sentence-transformers/all-mpnet-base-v2"
-}
+```text
+http://localhost:9476/docs
 ```
+
+The Swagger UI lets you:
+
+- Browse all available endpoints with their full request/response schemas
+- Execute live API calls directly from the browser (no extra tooling needed)
+- Inspect example request bodies and expected responses
+
+### Raw OpenAPI Specification
+
+The machine-readable OpenAPI 3.0 YAML spec is served at:
+
+```text
+http://localhost:9476/openapi.yaml
+```
+
+You can import this file into tools like Postman, Insomnia, or any OpenAPI-compatible client.
+
+### Swagger UI Screenshot
+
+| URL | Purpose |
+|-----|---------|
+| `http://localhost:9476/docs` | Interactive Swagger UI |
+| `http://localhost:9476/openapi.yaml` | Raw OpenAPI 3.0 spec (YAML) |
 
 ## Project Structure
 
@@ -224,6 +226,7 @@ Upload a PDF, convert to markdown, chunk, and store embeddings.
 TCC Timeseries/
 ├── app.py                          # Flask API server
 ├── main.py                         # Main orchestration script
+├── openapi.yaml                    # OpenAPI 3.0 specification
 ├── requirements.txt                # Production dependencies
 ├── requirements-test.txt           # Test dependencies
 ├── pytest.ini                      # Pytest configuration
@@ -233,7 +236,6 @@ TCC Timeseries/
 │   ├── __init__.py
 │   ├── data_engineering.py         # Data loading and preprocessing
 │   ├── ml_model.py                 # Time series ML model
-│   ├── pdf_embedding_pipeline.py   # PDF processing pipeline
 │   ├── train_savings_plan_classifier.py  # Classifier training
 │   │
 │   ├── data/                       # Data files
@@ -252,7 +254,6 @@ TCC Timeseries/
     ├── test_main.py                # Orchestration tests
     ├── test_data_engineering.py    # Data pipeline tests
     ├── test_ml_model.py            # ML model tests
-    ├── test_pdf_embedding_pipeline.py  # PDF pipeline tests
     ├── test_train_savings_plan_classifier.py
     ├── README.md                   # Test documentation
     └── TEST_COVERAGE_SUMMARY.md    # Coverage report
@@ -302,22 +303,6 @@ next_month, forecast = load_and_predict(
 
 print(f"Next month: ₹{next_month:,.2f}")
 print(f"3-month forecast: {forecast.tolist()}")
-```
-
-### Example 4: Process PDF Document
-
-```python
-from src.pdf_embedding_pipeline import process_pdf_file
-
-result = process_pdf_file(
-    pdf_path='document.pdf',
-    collection_name='my_documents',
-    db_path='./my_db',
-    output_dir='./markdown_output'
-)
-
-print(f"Processed {result['chunk_count']} chunks")
-print(f"Average tokens per chunk: {result['average_tokens_per_chunk']:.1f}")
 ```
 
 ## Testing
@@ -434,14 +419,6 @@ CSV file with columns:
 - **Class Balancing**: Balanced class weights
 - **Validation**: Stratified train-test split (80/20)
 
-### PDF Embedding Model
-
-- **Embedding Model**: sentence-transformers/all-mpnet-base-v2
-- **Tokenizer**: AutoTokenizer from transformers
-- **Chunking**: Token-aware with section context
-- **Max Tokens**: 512 per chunk
-- **Vector Database**: ChromaDB with cosine similarity
-
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -454,10 +431,6 @@ FLASK_DEBUG=True
 # Model paths
 MODEL_DIR=src/models
 DATA_DIR=src/data
-
-# ChromaDB configuration
-CHROMA_DB_PATH=./db
-CHROMA_COLLECTION=pdf_documents
 ```
 
 ### Model Parameters
@@ -466,7 +439,6 @@ Edit in respective modules:
 
 - `src/ml_model.py`: Exponential smoothing parameters
 - `src/train_savings_plan_classifier.py`: Classifier parameters
-- `src/pdf_embedding_pipeline.py`: Embedding and chunking parameters
 
 ## 🐛 Troubleshooting
 
@@ -485,15 +457,6 @@ Edit in respective modules:
 
 - Solution: Ensure all dependencies are installed: `pip install -r requirements.txt`
 
-#### 4. PDF processing fails
-
-- Solution: Check that docling and related dependencies are installed
-- Verify PDF file is not corrupted
-
-#### 5. ChromaDB errors
-
-- Solution: Ensure ChromaDB is installed and database path is writable
-
 ## 📝 API Response Codes
 
 - `200 OK`: Successful request
@@ -503,16 +466,12 @@ Edit in respective modules:
 ## 🔐 Security Considerations
 
 - Input validation on all API endpoints
-- File upload size limits (configure in Flask)
-- Sanitized filenames for PDF uploads
 - No sensitive data in error messages
 
 ## 🚀 Performance
 
 - **Model Training**: ~1-2 seconds per user
 - **Prediction**: <100ms per request
-- **PDF Processing**: Depends on document size (~5-30 seconds)
-- **Embedding Generation**: Batched for efficiency
 
 ## 📈 Future Enhancements
 
@@ -544,10 +503,9 @@ This project is proprietary software. All rights reserved.
 
 ## 🙏 Acknowledgments
 
-- Built with Flask, scikit-learn, statsmodels, and sentence-transformers
-- PDF processing powered by Docling
-- Vector storage with ChromaDB
-- Time series analysis with Exponential Smoothing
+- Built with Flask, scikit-learn, and statsmodels
+- Time series analysis with Holt-Winters Exponential Smoothing
+- Interactive API docs via Swagger UI (flask-swagger-ui)
 
 ---
 
