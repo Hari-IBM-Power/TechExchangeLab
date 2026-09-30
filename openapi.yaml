@@ -13,10 +13,21 @@ info:
   contact:
     name: API Support
 servers:
-  - url: http://<Update the IP here>:9476
-    description: Production server
-  - url: http://localhost:9476
-    description: Local development server
+  # ─────────────────────────────────────────────────────────────────────────
+  # DEPLOYMENT CONFIGURATION — update the URL below before deploying
+  #
+  # Local development (default):
+  #   Leave as-is. Flask binds to 127.0.0.1 by default.
+  #
+  # Remote server / Linux LPAR:
+  #   1. Replace 127.0.0.1 in this file with your server's IP address.
+  #   2. In app.py (line 318), change host='127.0.0.1' to your server's IP.
+  #   Example: http://192.168.1.100:9476
+  # ─────────────────────────────────────────────────────────────────────────
+  - url: http://127.0.0.1:9476
+    description: Local development server (default)
+  - url: http://<YOUR-SERVER-IP>:9476
+    description: Remote server / Linux LPAR — replace <YOUR-SERVER-IP> with the actual IP
 
 tags:
   - name: Savings Prediction

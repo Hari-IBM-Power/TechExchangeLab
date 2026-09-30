@@ -421,6 +421,37 @@ CSV file with columns:
 
 ## 🔧 Configuration
 
+### 🌐 Deployment Configuration (IP Address)
+
+When deploying to a **remote server or Linux LPAR**, two files must be updated with the server's IP address:
+
+#### 1. `openapi.yaml` — Swagger UI server target
+
+Open [`openapi.yaml`](openapi.yaml) and find the `servers` block near the top (around line 15).
+Replace `<YOUR-SERVER-IP>` with your server's actual IP and move it to be the **first entry** so Swagger UI uses it by default:
+
+```yaml
+servers:
+  - url: http://192.168.1.100:9476      # ← your server IP here (first = default)
+    description: Remote server / Linux LPAR
+  - url: http://127.0.0.1:9476
+    description: Local development server
+```
+
+#### 2. `app.py` — Flask bind address
+
+Open [`app.py`](app.py) and find the last line (around line 318).
+Replace `127.0.0.1` with the same server IP so Flask accepts external connections:
+
+```python
+app.run(debug=True, host='192.168.1.100', port=9476)  # ← your server IP here
+```
+
+> **Note:** Do not use `0.0.0.0` as the host — bind to the specific server IP only.
+> Also ensure port `9476` is open in the server's firewall.
+
+---
+
 ### Environment Variables
 
 ```bash
