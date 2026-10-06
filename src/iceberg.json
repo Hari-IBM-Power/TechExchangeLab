@@ -1,0 +1,47 @@
+{
+    "connection_name": "test",
+    "properties": {
+        "connection": [
+            {
+                "name": "instance_id",
+                "value": "1788966827072084"
+            },
+            {
+                "name": "engine_host",
+                "value": "ibm-lh-lakehouse-presto54-presto-svc.apps.paris.edu.ihost.com"
+            },
+            {
+                "name": "engine_id",
+                "value": "presto54"
+            },
+            {
+                "name": "engine_port",
+                "value": "443"
+            },
+            {
+                "name": "host",
+                "value": "cpd-watsonx.apps.paris.edu.ihost.com"
+            },
+            {
+                "name": "deployment_type",
+                "value": "software_ent"
+            },
+            {
+                "name": "ssl_certificate",
+                "value": "-----BEGIN CERTIFICATE-----\nMIIGBTCCBO2gAwIBAgIUOTSczccYzNYM6i2YgZRRyedTtFAwDQYJKoZIhvcNAQEL\nBQAwHDEaMBgGA1UEAxMRY3MtY2EtY2VydGlmaWNhdGUwHhcNMjYwOTA5MTUxNDIw\nWhcNMzYwOTA2MTUxNDIwWjAcMRowGAYDVQQDExFpYm0tbGgtdGxzLXNlY3JldDCC\nASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL+Wqcb33C7/d+7YNzLTdWSv\nDK4EE12KpJ3n/k2eR/BtOd77NhA3B6onTMdxP+LUKTVQKanV6xfq3q5toDmJPAnT\nyoNRbXbDl4ukJmgvBFdy0xEtdjawMTBrkD5uFnBWCgMk5/JSZwDDgheHTi8aTLFt\nxik8LhuZt+0iXyIwLPVNa81qClHpY8TGFgfPmuN+r7nfmUQkQ0rUvt/GMpN8Qxtq\nYRUjSuhpdwhsSMn+AX3/X1Y4eDbYRgi7HLiaz5JH7qYhGo5S0ZOXb8QhjbqjoFyM\ndAkrRMY03D6dPHfNsGe5zwvxryAeCdCdCisg8kIww6zMe0vsatu1/bYkxgli+WkC\nAwEAAaOCAz0wggM5MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMB8GA1Ud\nIwQYMBaAFGMnzT7hbk15lTCPDjfixritYXYwMIIC9gYDVR0RBIIC7TCCAumCDSou\nd2F0c29ueC5zdmOCGyoud2F0c29ueC5zdmMuY2x1c3Rlci5sb2NhbIITKi5zdmMu\nY2x1c3Rlci5sb2NhbIIJbG9jYWxob3N0ghFpYm0tbGgtcHJlc3RvLXN2Y4INKi53\nYXRzb254LnBvZIIbKi53YXRzb254LnBvZC5jbHVzdGVyLmxvY2FsghMqLnBvZC5j\nbHVzdGVyLmxvY2FsghwqLmlibS1saC1wcmVzdG8taGVhZGxlc3Mtc3ZjgiQqLmli\nbS1saC1wcmVzdG8taGVhZGxlc3Mtc3ZjLndhdHNvbniCKCouaWJtLWxoLXByZXN0\nby1oZWFkbGVzcy1zdmMud2F0c29ueC5zdmOCNiouaWJtLWxoLXByZXN0by1oZWFk\nbGVzcy1zdmMud2F0c29ueC5zdmMuY2x1c3Rlci5sb2NhbIIcKi5pYm0tbGgtbWls\ndnVzLWhlYWRsZXNzLXN2Y4IkKi5pYm0tbGgtbWlsdnVzLWhlYWRsZXNzLXN2Yy53\nYXRzb254gigqLmlibS1saC1taWx2dXMtaGVhZGxlc3Mtc3ZjLndhdHNvbnguc3Zj\ngjYqLmlibS1saC1taWx2dXMtaGVhZGxlc3Mtc3ZjLndhdHNvbnguc3ZjLmNsdXN0\nZXIubG9jYWyCISoubWlsdnVzLmFwcHMucGFyaXMuZWR1Lmlob3N0LmNvbYIiKi53\nYXRzb254LmFwcHMucGFyaXMuZWR1Lmlob3N0LmNvbYIaKi5hcHBzLnBhcmlzLmVk\ndS5paG9zdC5jb22CGSouaWJtLWxoLWNlcy1oZWFkbGVzcy1zdmOCISouaWJtLWxo\nLWNlcy1oZWFkbGVzcy1zdmMud2F0c29ueIIlKi5pYm0tbGgtY2VzLWhlYWRsZXNz\nLXN2Yy53YXRzb254LnN2Y4IzKi5pYm0tbGgtY2VzLWhlYWRsZXNzLXN2Yy53YXRz\nb254LnN2Yy5jbHVzdGVyLmxvY2FsMA0GCSqGSIb3DQEBCwUAA4IBAQBAx2sEooz6\n2ZTLLeAI6MCKXMzOsdu1HU2zZ+VvNR6XWHO1MQrbKl/mUCSuQBwtaVydbSqLtbwk\nxz50wxyV7P63/Gv9EVQbyJcw53SM4zeJkwKkhBTeXtsJd+o/Uudn2Yzo5qj12oRZ\n2WxP88xIs9uKnndOVVdU/T4cUZiu1B+aSbbWW2ls75PpxGkYlocEQEFA9QfY+v0a\neZZd4pOsyQJ9MGBhKs/Zx02SSUuJM2mr6B8SliBQZuPZXXnG3BYMegwKl3sPsG5h\ndsu8X0kDJu6cdz/4RzWbww38/P0BEHN4pOUJ55z5/liDyj47rajjYdThJ+JgA+8F\ntkEXVeHAk5Es\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIIDazCCAlOgAwIBAgIIArgyADyDj74wDQYJKoZIhvcNAQELBQAwJjEkMCIGA1UE\nAwwbaW5ncmVzcy1vcGVyYXRvckAxNzg4NTM4OTUyMB4XDTI2MDkwNDE2MjIzNFoX\nDTI4MDkwMzE2MjIzNVowJTEjMCEGA1UEAwwaKi5hcHBzLnBhcmlzLmVkdS5paG9z\ndC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDCTrM8bstfs66d\nzp5EkTaMMi9YmQBvrZEEZ6gcxE22sxRpL5G9+OrUJ5sdwmVL7RRhM+2b5KY78aCS\n/PmTW50b4yLVPI9nHgbROI5FFPnL8JJlCNA+DnV7bSF18+I6bFbcVlbSQhKcIziZ\nSkrAXgkb8OI4OkXKukXcNWcyX8+46LuxuKkyKGUsdNHXxa1OkE7bmltKV690HgNp\nemYhhWvR5fpOpfVDRN3q0kWHeFdwjF5f45DEZ279lT/vkUsbc3Cew46yb3IJ3pxO\nSGr4tsOU7a+yJJErx7GizJK8fi65I/KP1LTlKZYO/MaETPEeJOTzBAfzCx4jl6oL\n3wWKXtTbAgMBAAGjgZ0wgZowDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG\nAQUFBwMBMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFIQD4+u6wIJNZW7DEbRWyUT8\nj5IZMB8GA1UdIwQYMBaAFHKHCOGJNrxtm41Krbcn7MiGxxx8MCUGA1UdEQQeMByC\nGiouYXBwcy5wYXJpcy5lZHUuaWhvc3QuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQCc\nM07kZHRhE+2NDVfUZeaVtFpLxy2yC+womedEZe5t0tXP1CEwPRvGls1Ruk7/1vAu\ncQD2nEvePY898P5BtHNpnBS1HU4NbKXGf/SFyg3qttziC02amdB4pWRKJAQMaW9j\nTKGGUIXo6SQPaXf1E6oWpwCMWRnjuRuXc17u1h5HLhIKR/GI/DXSGnLGlT9QEoa8\nv1ajQmvOVEwxQ64HAAKC8In19mNS0pqeNH90gqdXYUbdYSnT+xnoUSnDcXwVR/jR\nh3b4sW4QlfFJJMV/z8SJRgZtfApICUHQq6hy/98GUWDfLstPEy8jVRgFgiIfOTw0\n4D6Fz+kiwMvdW5Cg6Mn6\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIIDDDCCAfSgAwIBAgIBATANBgkqhkiG9w0BAQsFADAmMSQwIgYDVQQDDBtpbmdy\nZXNzLW9wZXJhdG9yQDE3ODg1Mzg5NTIwHhcNMjYwOTA0MTYyMjMyWhcNMjgwOTAz\nMTYyMjMzWjAmMSQwIgYDVQQDDBtpbmdyZXNzLW9wZXJhdG9yQDE3ODg1Mzg5NTIw\nggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7NrF1Yo1lbQ9beZk58AVu\nAZ2lEAM/jjX6nk90MyfXRRbUgwGz+yHtKNyr1+evO2QpHTXdanPjnVcf+l+dyfNq\nHs0ssqESdUG/y4K8lS12iSA6BYvI221KIhLLvB32tGrWLam2ZSk9gjbpD9bmO6eJ\nsoDLT09esRfyfo6m6S4PycJni5d81SiDJ2Eu1CNJqeFe5210NJpydw6EA1vdmT/M\nwCH+CGUG/jc1/CjjBb6MijjmFAilG/HzjHyZgz7zACosX0ABQvUWm0jX91amCCVT\nbMQm9o7FJxQexa1TRntB0D1teNQy4KFkTzeiHGQEfm83HQgiZRZ8idmyLGXhHPnJ\nAgMBAAGjRTBDMA4GA1UdDwEB/wQEAwICpDASBgNVHRMBAf8ECDAGAQH/AgEAMB0G\nA1UdDgQWBBRyhwjhiTa8bZuNSq23J+zIhsccfDANBgkqhkiG9w0BAQsFAAOCAQEA\noBxOBD9z2OU+UcfRn9qfdgBD0zyGRTNI3Jz7d4p53zSl6U2IrENoPNxiOCG0HxXm\nAqxLP1VoJurbY+AqQjLaw61+AKKy86x6CUtsMzfRujKfVhpkM7aO8QELf+s8vyqv\n+b4Dz1eTO9da9HFURed07Z3HEZQv38//Mi/nomBhRYU+EV8LFf/J1gZVSdRw37kB\nbgOyhq3RQ8geX1HLqF1p8WT2M3tkLuqkQ+Sl0rLJr4GBKaG6fXsFo/vhJwS5t+b+\n1beN7yW0aNzmMB4En10e1uc7cAgNOgnNUHoJ1TxzLo9NGG6RctcSdz/bvK3v7o/1\nD92Pv6FE9vpXpZ/X5rHVaw==\n-----END CERTIFICATE-----\n"
+            },
+            {
+                "name": "port",
+                "value": "443"
+            },
+            {
+                "name": "ssl",
+                "value": "true"
+            },
+            {
+                "name": "engine_type",
+                "value": "presto"
+            }
+        ]
+    }
+}

@@ -313,21 +313,6 @@ def index():
 
 
 if __name__ == '__main__':  # pragma: no cover
-    # ─────────────────────────────────────────────────────────────────────
-    # DEPLOYMENT CONFIGURATION — update host before deploying to a server
-    #
-    # Local development (default):
-    #   Leave host='127.0.0.1' as-is.
-    #
-    # Remote server / Linux LPAR:
-    #   Replace '127.0.0.1' with your server's IP address.
-    #   Example: host='192.168.1.100'
-    #   Also update the matching entry in openapi.yaml (servers block).
-    #
-    # Note: Do NOT use host='0.0.0.0' — bind to the specific IP only.
-    # In production, use a proper WSGI server like gunicorn instead:
-    #   gunicorn -w 4 -b 192.168.1.100:9476 app:app
-    # ─────────────────────────────────────────────────────────────────────
-    app.run(debug=True, host='127.0.0.1', port=9476)
+    app.run(debug=True, host='0.0.0.0', port=9476)
 
 # Made with Bob

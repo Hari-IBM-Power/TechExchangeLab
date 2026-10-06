@@ -1,3 +1,5 @@
+# LEGACY: This module is superseded by data_engineering_iceberg.py and can be safely ignored.
+
 """
 Data Engineering Module for Time Series Analysis
 Handles data loading, preprocessing, and feature engineering for user savings prediction

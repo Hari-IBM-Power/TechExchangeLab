@@ -4,7 +4,7 @@ Unit tests for data_engineering module
 import pytest
 import pandas as pd
 import numpy as np
-from src.data_engineering import (
+from src.data_engineering_iceberg import (
     load_transaction_data,
     preprocess_data,
     calculate_monthly_savings,

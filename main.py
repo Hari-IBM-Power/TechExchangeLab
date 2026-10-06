@@ -5,7 +5,7 @@ Automatically trains model if user exists in data but model doesn't exist
 """
 
 import os
-from src.data_engineering import (
+from src.data_engineering_iceberg import (
     get_user_savings_timeseries,
     validate_user_exists,
     get_available_users,

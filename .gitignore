@@ -4,3 +4,8 @@
 __pycache__
 .pytest_cache
 *.zip
+
+.env
+src/cert.crt
+
+*plan.md

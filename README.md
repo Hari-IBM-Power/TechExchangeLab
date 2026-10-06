@@ -60,7 +60,18 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Install test dependencies (optional)**
+4. **Configure environment variables**
+
+Create a `.env` file in the project root with your watsonx.data Iceberg credentials:
+
+```bash
+LH_USER=your_iceberg_username
+LH_PW=your_iceberg_password
+```
+
+> **Note:** Never commit `.env` to version control — it is already listed in `.gitignore`.
+
+1. **Install test dependencies (optional)**
 
 ```bash
 pip install -r requirements-test.txt
@@ -454,15 +465,23 @@ app.run(debug=True, host='192.168.1.100', port=9476)  # ← your server IP here
 
 ### Environment Variables
 
+Create a `.env` file in the project root. The following variables are supported:
+
 ```bash
-# Flask configuration
+# watsonx.data Iceberg credentials (required)
+LH_USER=your_iceberg_username   # Username for the Presto/Iceberg connection
+LH_PW=your_iceberg_password     # Password for the Presto/Iceberg connection
+
+# Flask configuration (optional)
 FLASK_ENV=development
 FLASK_DEBUG=True
 
-# Model paths
+# Model paths (optional)
 MODEL_DIR=src/models
 DATA_DIR=src/data
 ```
+
+`LH_USER` and `LH_PW` are read by `src/data_engineering_iceberg.py` to authenticate against the watsonx.data Lakehouse. The API will fail to serve `/savings` requests if either variable is missing.
 
 ### Model Parameters
 
