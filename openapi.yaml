@@ -24,8 +24,9 @@ servers:
   #   2. In app.py (line 318), change host='127.0.0.1' to your server's IP.
   #   Example: http://192.168.1.100:9476
   # ─────────────────────────────────────────────────────────────────────────
-  - url: http://127.0.0.1:9476
-    description: Local development server (default)
+  #- url: http://127.0.0.1:9476
+  #  description: Local development server (default)
+  #- url: http://192.168.0.107:9476
   - url: http://<YOUR-SERVER-IP>:9476
     description: Remote server / Linux LPAR — replace <YOUR-SERVER-IP> with the actual IP
 
