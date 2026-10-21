@@ -11,8 +11,11 @@ import joblib
 import pandas as pd
 from flask import Flask, request, jsonify, send_from_directory
 from flask_swagger_ui import get_swaggerui_blueprint
+from pydantic import ValidationError
 
+from config import SAVINGS_PLAN_MODEL_PATH
 from main import main as predict_savings
+from src.predict_request import PredictRequest
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -35,7 +38,6 @@ def serve_openapi_spec():
 
 
 # Load the savings plan classifier model
-SAVINGS_PLAN_MODEL_PATH = "./src/models/savings_plan_classifier.pkl"
 SAVINGS_PLAN_MODEL = None
 
 try:
@@ -44,22 +46,6 @@ try:
 except Exception as e:  # pylint: disable=broad-except
     print(f"Warning: Could not load savings plan classifier: {e}")
 
-# Feature names for savings plan classifier
-SAVINGS_PLAN_FEATURE_NAMES = [
-    "Current Age",
-    "Retirement Age",
-    "Birth Year",
-    "Birth Month",
-    "Gender",
-    "City",
-    "State",
-    "Zipcode",
-    "Per Capita Income - Zipcode",
-    "Yearly Income - Person",
-    "Total Debt",
-    "FICO Score",
-    "Savings Plan",
-]
 
 
 @app.route('/savings', methods=['POST'])
@@ -163,13 +149,16 @@ def predict_savings_plan():
 
     Predict savings plan classification based on user features.
 
-    Request Body (JSON):
+    Request Body (JSON), each field strictly typed:
     {
-        "features": [
-            Current Age, Retirement Age, Birth Year, Birth Month,
-            Gender, City, State, Zipcode, Per Capita Income - Zipcode,
-            Yearly Income - Person, Total Debt, FICO Score, Savings Plan
-        ]
+        "current_age": int, "retirement_age": int,
+        "birth_year": int, "birth_month": int,
+        "gender": str, "city": str, "state": str, "zipcode": str,
+        "per_capita_income_zipcode": number,
+        "yearly_income_person": number,
+        "total_debt": number,
+        "fico_score": int,
+        "savings_plan": str  # Optional
     }
 
     Response (JSON):
@@ -197,30 +186,27 @@ def predict_savings_plan():
         data = request.get_json(force=True)
 
         # Validate request body
-        if not data:
+        if not data or not isinstance(data, dict):
             return jsonify({
                 'success': False,
-                'error': 'Request body must be JSON'
+                'error': 'Request body must be a JSON object'
             }), 400
 
-        # Validate features parameter
-        if 'features' not in data:
+        # Validate field names and datatypes
+        try:
+            payload = PredictRequest.model_validate(data)
+        except ValidationError as e:
+            invalid_fields = sorted({
+                '.'.join(str(part) for part in err['loc']) for err in e.errors()
+            })
             return jsonify({
                 'success': False,
-                'error': 'Missing required parameter: features'
+                'error': 'Missing, unknown or wrongly typed fields: '
+                         + ', '.join(invalid_fields)
             }), 400
 
-        features = data['features']
-
-        # Validate features is a list
-        if not isinstance(features, list):
-            return jsonify({
-                'success': False,
-                'error': 'features must be a list'
-            }), 400
-
-        # Convert to DataFrame with column names
-        df = pd.DataFrame([features], columns=pd.Index(SAVINGS_PLAN_FEATURE_NAMES))
+        # Convert to DataFrame with the model's column names
+        df = pd.DataFrame([payload.to_model_row()])
 
         # Predict
         prediction = SAVINGS_PLAN_MODEL.predict(df)
@@ -279,19 +265,34 @@ def index():
             'POST /predict': {
                 'description': 'Predict savings plan classification based on user features',
                 'parameters': {
-                    'features': (
-                        'array of 13 values (required): [Current Age, Retirement Age, '
-                        'Birth Year, Birth Month, Gender, City, State, Zipcode, '
-                        'Per Capita Income - Zipcode, Yearly Income - Person, '
-                        'Total Debt, FICO Score, Savings Plan]'
-                    )
+                    'current_age': 'integer (required)',
+                    'retirement_age': 'integer (required)',
+                    'birth_year': 'integer (required)',
+                    'birth_month': 'integer (required)',
+                    'gender': 'string (required)',
+                    'city': 'string (required)',
+                    'state': 'string (required)',
+                    'zipcode': 'string (required)',
+                    'per_capita_income_zipcode': 'number (required)',
+                    'yearly_income_person': 'number (required)',
+                    'total_debt': 'number (required)',
+                    'fico_score': 'integer (required)',
+                    'savings_plan': 'string (optional)'
                 },
                 'example': {
                     'request': {
-                        'features': [
-                            45, 65, 1979, 6, 'Male', 'New York', 'NY',
-                            '10001', 75000, 120000, 50000, 720, 'Plan A'
-                        ]
+                        'current_age': 45,
+                        'retirement_age': 65,
+                        'birth_year': 1979,
+                        'birth_month': 6,
+                        'gender': 'Male',
+                        'city': 'New York',
+                        'state': 'NY',
+                        'zipcode': '10001',
+                        'per_capita_income_zipcode': 75000,
+                        'yearly_income_person': 120000,
+                        'total_debt': 50000,
+                        'fico_score': 720
                     },
                     'response': {
                         'success': True,

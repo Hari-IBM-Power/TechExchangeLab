@@ -9,3 +9,4 @@ flask-swagger-ui>=4.11.1
 sqlalchemy>=2.0.0
 pyhive[presto]>=0.7.0
 python-dotenv>=1.0.0
+pydantic>=2.12.5

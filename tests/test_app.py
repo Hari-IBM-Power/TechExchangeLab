@@ -5,7 +5,9 @@ import json
 from unittest.mock import patch, MagicMock
 
 import numpy as np
-import pytest  # pylint: disable=unused-import
+import pytest
+
+from config import SAVINGS_PLAN_FIELD_TO_COLUMN
 
 
 class TestSavingsEndpoint:
@@ -305,72 +307,124 @@ class TestResponseFormat:
             assert response.content_type == 'application/json'
 
 
+VALID_PAYLOAD = {
+    'current_age': 45,
+    'retirement_age': 65,
+    'birth_year': 1979,
+    'birth_month': 6,
+    'gender': 'Male',
+    'city': 'New York',
+    'state': 'NY',
+    'zipcode': '10001',
+    'per_capita_income_zipcode': 75000,
+    'yearly_income_person': 120000.5,
+    'total_debt': 50000,
+    'fico_score': 720,
+}
+
+
+def _post_predict(client, payload):
+    """POST a JSON payload to /predict."""
+    return client.post(
+        '/predict',
+        data=json.dumps(payload),
+        content_type='application/json'
+    )
+
+
 class TestPredictEndpoint:
     """Tests for /predict POST endpoint"""
 
     def test_predict_endpoint_success(self, flask_client):
-        """Test successful prediction request"""
-        with patch('app.savings_plan_model') as mock_model:
+        """Valid named fields return a prediction"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
             mock_model.predict.return_value = np.array(['Plan A'])
 
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [45, 65, 1979, 6, 'Male', 'New York', 'NY', '10001',
-                                75000, 120000, 50000, 720, 'Plan A']
-                }),
-                content_type='application/json'
-            )
+            response = _post_predict(flask_client, VALID_PAYLOAD)
 
             assert response.status_code == 200
             data = json.loads(response.data)
             assert data['success'] is True
-            assert 'prediction' in data
             assert data['prediction'] == ['Plan A']
 
-    def test_predict_endpoint_missing_features(self, flask_client):
-        """Test request without features parameter"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.return_value = MagicMock()
+    def test_predict_endpoint_builds_named_dataframe(self, flask_client):
+        """The model receives one row keyed by the trained column names"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            mock_model.predict.return_value = np.array(['Plan A'])
 
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({'other_field': 'value'}),
-                content_type='application/json'
-            )
+            _post_predict(flask_client, VALID_PAYLOAD)
+
+            df = mock_model.predict.call_args[0][0]
+            assert list(df.columns) == list(SAVINGS_PLAN_FIELD_TO_COLUMN.values())
+            assert df.loc[0, 'Current Age'] == 45
+            assert df.loc[0, 'Per Capita Income - Zipcode'] == 75000
+
+    def test_predict_endpoint_savings_plan_optional(self, flask_client):
+        """savings_plan may be omitted or supplied"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            mock_model.predict.return_value = np.array(['Plan B'])
+
+            without_plan = _post_predict(flask_client, VALID_PAYLOAD)
+            with_plan = _post_predict(flask_client, {**VALID_PAYLOAD, 'savings_plan': 'P1'})
+
+            assert without_plan.status_code == 200
+            assert with_plan.status_code == 200
+
+    def test_predict_endpoint_missing_field(self, flask_client):
+        """A missing required field returns 400 naming the field"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            payload = {k: v for k, v in VALID_PAYLOAD.items() if k != 'city'}
+
+            response = _post_predict(flask_client, payload)
 
             assert response.status_code == 400
             data = json.loads(response.data)
             assert data['success'] is False
-            assert 'Missing required parameter: features' in data['error']
+            assert 'city' in data['error']
+            mock_model.predict.assert_not_called()
 
-    def test_predict_endpoint_features_not_list(self, flask_client):
-        """Test request with features not as a list"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.return_value = MagicMock()
-
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({'features': 'not a list'}),
-                content_type='application/json'
-            )
+    @pytest.mark.parametrize('field, bad_value', [
+        ('current_age', '45'),
+        ('current_age', 45.5),
+        ('fico_score', True),
+        ('gender', 1),
+        ('zipcode', 10001),
+        ('total_debt', '50000'),
+    ])
+    def test_predict_endpoint_wrong_type(self, flask_client, field, bad_value):
+        """A wrongly typed field returns 400 naming the field"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            response = _post_predict(flask_client, {**VALID_PAYLOAD, field: bad_value})
 
             assert response.status_code == 400
             data = json.loads(response.data)
             assert data['success'] is False
-            assert 'features must be a list' in data['error']
+            assert field in data['error']
+            mock_model.predict.assert_not_called()
+
+    def test_predict_endpoint_unknown_field(self, flask_client):
+        """An unknown key is rejected"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            response = _post_predict(flask_client, {**VALID_PAYLOAD, 'features': [1, 2]})
+
+            assert response.status_code == 400
+            data = json.loads(response.data)
+            assert 'features' in data['error']
+            mock_model.predict.assert_not_called()
+
+    def test_predict_endpoint_error_does_not_echo_values(self, flask_client):
+        """Error messages contain field names only, never submitted values"""
+        with patch('app.SAVINGS_PLAN_MODEL'):
+            response = _post_predict(
+                flask_client, {**VALID_PAYLOAD, 'current_age': 'SECRET-VALUE-123'}
+            )
+
+            assert 'SECRET-VALUE-123' not in response.get_data(as_text=True)
 
     def test_predict_endpoint_model_not_loaded(self, flask_client):
-        """Test request when model is not loaded"""
-        with patch('app.savings_plan_model', None):
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [45, 65, 1979, 6, 'Male', 'New York', 'NY', '10001',
-                                75000, 120000, 50000, 720, 'Plan A']
-                }),
-                content_type='application/json'
-            )
+        """Request when model is not loaded returns 500"""
+        with patch('app.SAVINGS_PLAN_MODEL', None):
+            response = _post_predict(flask_client, VALID_PAYLOAD)
 
             assert response.status_code == 500
             data = json.loads(response.data)
@@ -378,60 +432,19 @@ class TestPredictEndpoint:
             assert 'model not loaded' in data['error'].lower()
 
     def test_predict_endpoint_prediction_error(self, flask_client):
-        """Test handling of prediction errors"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.predict.side_effect = Exception("Prediction failed")
+        """Prediction errors raised as ValueError return a generic 500"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
+            mock_model.predict.side_effect = ValueError("internal-detail-xyz")
 
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [45, 65, 1979, 6, 'Male', 'New York', 'NY', '10001',
-                                75000, 120000, 50000, 720, 'Plan A']
-                }),
-                content_type='application/json'
-            )
+            response = _post_predict(flask_client, VALID_PAYLOAD)
 
             assert response.status_code == 500
             data = json.loads(response.data)
             assert data['success'] is False
-            assert 'error' in data
-
-    def test_predict_endpoint_multiple_predictions(self, flask_client):
-        """Test prediction with multiple classes"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.predict.return_value = np.array(['Plan B'])
-
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [50, 67, 1974, 3, 'Female', 'Los Angeles', 'CA', '90001',
-                                85000, 150000, 30000, 750, 'Plan B']
-                }),
-                content_type='application/json'
-            )
-
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            assert data['success'] is True
-            assert len(data['prediction']) == 1
-
-    def test_predict_endpoint_empty_features(self, flask_client):
-        """Test request with empty features list"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.predict.side_effect = ValueError("Empty features")
-
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({'features': []}),
-                content_type='application/json'
-            )
-
-            assert response.status_code == 500
-            data = json.loads(response.data)
-            assert data['success'] is False
+            assert 'internal-detail-xyz' not in data['error']
 
     def test_predict_endpoint_invalid_json(self, flask_client):
-        """Test request with invalid JSON"""
+        """Request with invalid JSON is rejected"""
         response = flask_client.post(
             '/predict',
             data='not valid json',
@@ -441,41 +454,24 @@ class TestPredictEndpoint:
         assert response.status_code in [400, 500]
 
     def test_predict_endpoint_response_format(self, flask_client):
-        """Test that response has correct format"""
-        with patch('app.savings_plan_model') as mock_model:
+        """Response has the documented format"""
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
             mock_model.predict.return_value = np.array(['Plan A'])
 
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [45, 65, 1979, 6, 'Male', 'New York', 'NY', '10001',
-                                75000, 120000, 50000, 720, 'Plan A']
-                }),
-                content_type='application/json'
-            )
+            data = json.loads(_post_predict(flask_client, VALID_PAYLOAD).data)
 
-            data = json.loads(response.data)
             assert 'success' in data
-            assert 'prediction' in data
             assert isinstance(data['prediction'], list)
 
-    def test_predict_endpoint_numeric_features(self, flask_client):
-        """Test prediction with all numeric features"""
-        with patch('app.savings_plan_model') as mock_model:
-            mock_model.predict.return_value = np.array(['Plan C'])
+    def test_predict_endpoint_non_object_body(self, flask_client):
+        """A JSON array body is rejected with 400"""
+        with patch('app.SAVINGS_PLAN_MODEL'):
+            response = _post_predict(flask_client, [1, 2, 3])
 
-            response = flask_client.post(
-                '/predict',
-                data=json.dumps({
-                    'features': [30, 60, 1994, 12, 'Other', 'Chicago', 'IL', '60601',
-                                60000, 90000, 20000, 680, 'Plan C']
-                }),
-                content_type='application/json'
-            )
-
-            assert response.status_code == 200
+            assert response.status_code == 400
             data = json.loads(response.data)
-            assert data['success'] is True
+            assert 'JSON object' in data['error']
+
 
 
 class TestOpenApiEndpoint:  # pylint: disable=too-few-public-methods
@@ -530,7 +526,7 @@ class TestPredictEndpointNullBody:  # pylint: disable=too-few-public-methods
 
     def test_predict_null_body_returns_400(self, flask_client):
         """POST /predict with JSON 'null' body parses to None, triggering the 'not data' branch"""
-        with patch('app.savings_plan_model') as mock_model:
+        with patch('app.SAVINGS_PLAN_MODEL') as mock_model:
             mock_model.predict = MagicMock()
             # JSON 'null' → Python None (falsy), hitting the `if not data` branch
             response = flask_client.post(
@@ -541,7 +537,7 @@ class TestPredictEndpointNullBody:  # pylint: disable=too-few-public-methods
             assert response.status_code == 400
             data = json.loads(response.data)
             assert data['success'] is False
-            assert 'Request body must be JSON' in data['error']
+            assert 'Request body must be a JSON object' in data['error']
 
 
 # Made with Bob
@@ -557,4 +553,4 @@ class TestModelLoadFailure:  # pylint: disable=too-few-public-methods
 
         with patch('joblib.load', side_effect=OSError("no model")):
             importlib.reload(app_module)
-            assert app_module.savings_plan_model is None
+            assert app_module.SAVINGS_PLAN_MODEL is None

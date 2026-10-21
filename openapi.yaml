@@ -210,21 +210,9 @@ paths:
       summary: Predict Savings Plan Classification
       description: |
         Predict savings plan classification based on user features using a trained classifier model.
-        
-        Requires 13 feature values in the following order:
-        1. Current Age
-        2. Retirement Age
-        3. Birth Year
-        4. Birth Month
-        5. Gender
-        6. City
-        7. State
-        8. Zipcode
-        9. Per Capita Income - Zipcode
-        10. Yearly Income - Person
-        11. Total Debt
-        12. FICO Score
-        13. Savings Plan
+
+        Each feature is sent by name with a strict datatype. Missing, unknown or wrongly
+        typed fields are rejected with a 400 that names the offending fields.
       operationId: predictSavingsPlan
       requestBody:
         required: true
@@ -232,23 +220,76 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required:
-                - features
+                - current_age
+                - retirement_age
+                - birth_year
+                - birth_month
+                - gender
+                - city
+                - state
+                - zipcode
+                - per_capita_income_zipcode
+                - yearly_income_person
+                - total_debt
+                - fico_score
               properties:
-                features:
-                  type: array
-                  description: Array of 13 feature values
-                  items:
-                    oneOf:
-                      - type: number
-                      - type: string
-                  minItems: 13
-                  maxItems: 13
+                current_age:
+                  type: integer
+                  description: Current age in years
+                retirement_age:
+                  type: integer
+                  description: Planned retirement age in years
+                birth_year:
+                  type: integer
+                  description: Year of birth
+                birth_month:
+                  type: integer
+                  description: Month of birth
+                gender:
+                  type: string
+                  description: Gender
+                city:
+                  type: string
+                  description: City of residence
+                state:
+                  type: string
+                  description: State code
+                zipcode:
+                  type: string
+                  description: Zipcode (send as a string to keep leading zeros)
+                per_capita_income_zipcode:
+                  type: number
+                  description: Per capita income of the zipcode
+                yearly_income_person:
+                  type: number
+                  description: Yearly income of the person
+                total_debt:
+                  type: number
+                  description: Total debt
+                fico_score:
+                  type: integer
+                  description: FICO credit score
+                savings_plan:
+                  type: string
+                  description: Currently assigned savings plan (optional, not used by the model)
             examples:
               validRequest:
                 summary: Valid classification request
                 value:
-                  features: [45, 65, 1979, 6, "Male", "New York", "NY", "10001", 75000, 120000, 50000, 720, "Plan A"]
+                  current_age: 45
+                  retirement_age: 65
+                  birth_year: 1979
+                  birth_month: 6
+                  gender: "Male"
+                  city: "New York"
+                  state: "NY"
+                  zipcode: "10001"
+                  per_capita_income_zipcode: 75000
+                  yearly_income_person: 120000
+                  total_debt: 50000
+                  fico_score: 720
       responses:
         '200':
           description: Classification successful
@@ -267,11 +308,17 @@ paths:
                       type: string
                     example: ["Plan A"]
         '400':
-          description: Bad request - missing or invalid features
+          description: Bad request - missing, unknown or wrongly typed fields
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFields:
+                  summary: Wrongly typed and missing fields
+                  value:
+                    success: false
+                    error: "Missing, unknown or wrongly typed fields: city, current_age"
         '500':
           description: Internal server error or model not loaded
           content:

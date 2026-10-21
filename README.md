@@ -173,15 +173,32 @@ Predict next month's savings for a specific user.
 #### 4. **POST /predict** - Savings Plan Classification
 
 Predict the savings plan for a user based on their demographic and financial features.
+Each feature is sent by name and must have the correct datatype. Missing, unknown or
+wrongly typed fields return a `400` naming the offending fields.
+
+| Field | Type | Required |
+|---|---|---|
+| `current_age`, `retirement_age`, `birth_year`, `birth_month`, `fico_score` | integer | yes |
+| `per_capita_income_zipcode`, `yearly_income_person`, `total_debt` | number | yes |
+| `gender`, `city`, `state`, `zipcode` | string | yes |
+| `savings_plan` | string | no |
 
 **Request:**
 
 ```json
 {
-  "features": [
-    45, 65, 1979, 6, "Male", "New York", "NY",
-    "10001", 75000, 120000, 50000, 720, "Plan A"
-  ]
+  "current_age": 45,
+  "retirement_age": 65,
+  "birth_year": 1979,
+  "birth_month": 6,
+  "gender": "Male",
+  "city": "New York",
+  "state": "NY",
+  "zipcode": "10001",
+  "per_capita_income_zipcode": 75000,
+  "yearly_income_person": 120000,
+  "total_debt": 50000,
+  "fico_score": 720
 }
 ```
 

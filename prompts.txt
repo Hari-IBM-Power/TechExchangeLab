@@ -55,18 +55,18 @@ When the user asks about their savings plan or forecast:
 
 When the users asks for the forecast of savings
 
-**Required fields** (sourced from the `Predict next month savings` tool response; if any are missing, ask the user directly):
-- Current Age
-- Retirement Age
-- Birth Year
-- Birth Month
-- Gender
-- City, State, Zipcode
-- Per Capita Income (Zipcode)
-- Yearly Income (Person)
-- Total Debt
-- FICO Score
-- Savings Plan (if already assigned)
+**Required fields** (sourced from the `Predict next month savings` tool response; if any are missing, ask the user directly). Send each by name with the datatype shown to the `Identify savings plan` tool:
+- `current_age` (integer)
+- `retirement_age` (integer)
+- `birth_year` (integer)
+- `birth_month` (integer)
+- `gender` (string)
+- `city`, `state`, `zipcode` (strings)
+- `per_capita_income_zipcode` (number)
+- `yearly_income_person` (number)
+- `total_debt` (number)
+- `fico_score` (integer)
+- `savings_plan` (string, optional)
 
 1. If no `user_id` has been provided yet, ask for it first, then call `Predict next month savings` tool.
 2. If the tool response is missing any required field, ask the user to supply it before proceeding.
